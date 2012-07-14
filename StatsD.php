@@ -4,6 +4,9 @@
  * Sends statistics to the stats daemon over UDP
  **/
 class StatsD {
+   protected static $writeImmediately = false;
+   protected static $queuedStats = array();
+
    /**
     * Log timing information
     *
@@ -12,7 +15,7 @@ class StatsD {
     * @param float|1 $sampleRate the rate (0-1) for sampling.
     **/
    public static function timing($stat, $time, $sampleRate=1) {
-      self::queueStats(array($stat => "$time|us"), $sampleRate);
+      static::queueStats(array($stat => "$time|us"), $sampleRate);
    }
 
    /**
@@ -23,7 +26,7 @@ class StatsD {
     * @return boolean
     **/
    public static function increment($stats, $sampleRate=1) {
-      self::updateStats($stats, 1, $sampleRate);
+      static::updateStats($stats, 1, $sampleRate);
    }
 
    /**
@@ -34,7 +37,7 @@ class StatsD {
     * @return boolean
     **/
    public static function decrement($stats, $sampleRate=1) {
-      self::updateStats($stats, -1, $sampleRate);
+      static::updateStats($stats, -1, $sampleRate);
    }
 
    /**
@@ -52,7 +55,7 @@ class StatsD {
          $data[$stat] = "$delta|c";
       }
 
-      self::queueStats($data, $sampleRate);
+      static::queueStats($data, $sampleRate);
    }
 
    protected static function queueStats($data, $sampleRate=1) {
@@ -71,59 +74,39 @@ class StatsD {
 
       if (empty($sampledData)) { return; }
 
-      // Wrap this in a try/catch - failures in any of this should be silently ignored
-      try {
-         //$host = $config->getConfig("statsd.host");
-         $host = 'localhost';
-         //$port = $config->getConfig("statsd.port");
-         $port = 8125;
-         $fp = fsockopen("udp://$host", $port, $errno, $errstr);
-         if (! $fp) { return; }
-         // Non-blocking I/O, please.
-         stream_set_blocking($fp, 0);
-         foreach ($sampledData as $stat => $value) {
-            fwrite($fp, "$stat:$value");
-         }
-         fclose($fp);
-      } catch (Exception $e) {
+      static::$queuedStats = array_merge(static::$queuedStats, $sampledData);
+
+      if (static::$writeImmediately) {
+         static::sendAllStats();
       }
    }
 
-   /*
-    * Squirt the metrics over UDP
-    **/
-   protected static function send($data, $sampleRate=1) {
-      //$config = Config::getInstance();
-      //if (! $config->isEnabled("statsd")) { return; }
+   protected static function sendAllStats() {
+      if (empty(static::$queuedStats)) return;
 
-      // sampling
-      $sampledData = array();
-
-      if ($sampleRate < 1) {
-         foreach ($data as $stat => $value) {
-            if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
-               $sampledData[$stat] = "$value|@$sampleRate";
-            }
-         }
-      } else {
-         $sampledData = $data;
+      $data = array();
+      foreach (static::$queuedStats as $stat => $value) {
+         $data[] = "$stat:$value";
       }
 
+      static::sendAsUDP(implode("\n", $data));
+   }
+
+   /**
+    * Squirt the metrics over UDP
+    */
+   protected static function sendAsUDP($data) {
       if (empty($sampledData)) { return; }
 
       // Wrap this in a try/catch - failures in any of this should be silently ignored
       try {
-         //$host = $config->getConfig("statsd.host");
          $host = 'localhost';
-         //$port = $config->getConfig("statsd.port");
          $port = 8125;
          $fp = fsockopen("udp://$host", $port, $errno, $errstr);
          if (! $fp) { return; }
          // Non-blocking I/O, please.
          stream_set_blocking($fp, 0);
-         foreach ($sampledData as $stat => $value) {
-            fwrite($fp, "$stat:$value");
-         }
+         fwrite($fp, $data);
          fclose($fp);
       } catch (Exception $e) {
       }
