@@ -89,6 +89,8 @@ class StatsD {
          $data[] = "$stat:$value";
       }
 
+      static::$queuedStats = array();
+
       static::sendAsUDP(implode("\n", $data));
    }
 

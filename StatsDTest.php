@@ -10,8 +10,16 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
       StatsDMocker::increment("test-inc");
       $this->assertSame("test-inc:1|c", StatsDMocker::getWrittenData());
 
-      StatsDMocker::increment("test-inc", 1);
-      $this->assertSame("test-inc:1|c", StatsDMocker::getWrittenData());
+      StatsDMocker::updateStats("test-inc", 9);
+      $this->assertSame("test-inc:9|c", StatsDMocker::getWrittenData());
+   }
+
+   public function testDecrement() {
+      StatsDMocker::decrement("test-dec");
+      $this->assertSame("test-dec:-1|c", StatsDMocker::getWrittenData());
+
+      StatsDMocker::updateStats("test-dec", -9);
+      $this->assertSame("test-dec:-9|c", StatsDMocker::getWrittenData());
    }
 }
 
