@@ -23,6 +23,14 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
       StatsDMocker::updateStats("test-inc", 9);
       $this->assertSame("test-inc:9|c", StatsDMocker::getWrittenData());
    }
+
+   public function testSampleRate() {
+      StatsDMocker::increment("test-inc", 0);
+      StatsDMocker::decrement("test-dec", 0);
+      StatsDMocker::updateStats("test-dec", -9, 0);
+      StatsDMocker::updateStats("test-inc", 9, 0);
+      $this->assertSame("", StatsDMocker::getWrittenData());
+   }
 }
 
 class StatsDMocker extends StatsD {
