@@ -6,6 +6,9 @@
  * See: https://github.com/etsy/statsd
  **/
 class StatsD {
+   protected static $host = 'localhost';
+   protected static $port = '8125';
+
    /**
     * If true, stats are added to a queue until a flush is triggered
     * If false, stats are sent immediately, one UDP packet per call
@@ -136,8 +139,8 @@ class StatsD {
       // Wrap this in a try/catch -
       // failures in any of this should be silently ignored
       try {
-         $host = 'localhost';
-         $port = 8125;
+         $host = static::$host;
+         $port = static::$port;
          $fp = fsockopen("udp://$host", $port, $errno, $errstr);
          if (! $fp) { return; }
          // Non-blocking I/O, please.
