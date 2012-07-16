@@ -1,9 +1,15 @@
 <?php
 
 /**
- * Sends statistics to the stats daemon over UDP
+ * Sends statistics to an instance of the statsd daemon over UDP
+ *
+ * See: https://github.com/etsy/statsd
  **/
 class StatsD {
+   /**
+    * If true, stats are added to a queue until a flush is triggered
+    * If false, stats are sent immediately, one UDP packet per call
+    */
    protected static $addStatsToQueue = false;
    protected static $queuedStats = array();
 
@@ -75,6 +81,10 @@ class StatsD {
       static::queueStats($data, $sampleRate);
    }
 
+   /**
+    * Add stats to the queue or send them immediately depending on
+    * self::$addStatsToQueue
+    */
    protected static function queueStats($data, $sampleRate=1) {
       // sampling
       $sampledData = array();
@@ -96,6 +106,9 @@ class StatsD {
       }
    }
 
+   /**
+    * Flush the queue and send all the stats we have.
+    */
    protected static function sendAllStats() {
       if (empty(static::$queuedStats)) return;
 
@@ -110,7 +123,8 @@ class StatsD {
    protected static function sendAsUDP($data) {
       if (empty($sampledData)) { return; }
 
-      // Wrap this in a try/catch - failures in any of this should be silently ignored
+      // Wrap this in a try/catch -
+      // failures in any of this should be silently ignored
       try {
          $host = 'localhost';
          $port = 8125;
