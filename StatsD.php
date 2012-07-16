@@ -25,6 +25,16 @@ class StatsD {
    }
 
    /**
+    * Report the current value of some gauged value.
+    *
+    * @param string|array $stat The metric to report ong
+    * @param integer $value The value for this gauge
+    */
+   public static function gauge($stat, $value) {
+      static::queueStats(array($stat => "$value|g"));
+   }
+
+   /**
     * Increments one or more stats counters
     *
     * @param string|array $stats The metric(s) to increment.

@@ -21,6 +21,11 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
       $this->assertSame("test-tim:100|ms", StatsDMocker::getWrittenData());
    }
 
+   public function testGauges() {
+      StatsDMocker::gauge("test-gag", 345);
+      $this->assertSame("test-gag:345|g", StatsDMocker::getWrittenData());
+   }
+
    public function testUpdateStats() {
       StatsDMocker::updateStats("test-dec", -9);
       $this->assertSame("test-dec:-9|c", StatsDMocker::getWrittenData());
