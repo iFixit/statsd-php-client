@@ -56,6 +56,15 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
       $this->assertSame("test-inc:1|c\ntest-inc:1|c",
        StatsDMocker::getWrittenData());
    }
+
+   public function testFlushResumesImmediateSend() {
+      StatsDMocker::pauseStatsOutput();
+      StatsDMocker::flushStatsOutput();
+      $this->assertSame("", StatsDMocker::getWrittenData());
+      StatsDMocker::increment("test-a");
+      $this->assertSame("test-a:1|c",
+       StatsDMocker::getWrittenData());
+   }
 }
 
 class StatsDMocker extends StatsD {
