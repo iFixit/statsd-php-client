@@ -3,6 +3,7 @@
 /**
  * Sends statistics to an instance of the statsd daemon over UDP
  *
+ * Make changes here: https://github.com/iFixit/statsd-php-client
  * See: https://github.com/etsy/statsd
  **/
 class StatsD {
