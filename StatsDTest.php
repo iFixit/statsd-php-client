@@ -4,6 +4,8 @@ require("./StatsD.php");
 
 /**
  * Designed to work with PHPUnit
+ *
+ * Make changes here: https://github.com/iFixit/statsd-php-client
  */
 class StatsDTest extends PHPUnit_Framework_TestCase {
    public function testIncrement() {
