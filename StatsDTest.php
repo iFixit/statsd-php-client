@@ -31,11 +31,30 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
       StatsDMocker::updateStats("test-inc", 9, 0);
       $this->assertSame("", StatsDMocker::getWrittenData());
    }
+
+   public function testPauseAndFlushCounts() {
+      StatsDMocker::pauseStatsOutput();
+      StatsDMocker::increment("test-a");
+      StatsDMocker::increment("test-b");
+      $this->assertSame("", StatsDMocker::getWrittenData());
+      StatsDMocker::flushStatsOutput();
+      $this->assertSame("test-a:1|c\ntest-b:1|c",
+       StatsDMocker::getWrittenData());
+   }
+
+   public function testPauseAndFlushSameName() {
+      StatsDMocker::pauseStatsOutput();
+      StatsDMocker::increment("test-inc");
+      StatsDMocker::increment("test-inc");
+      $this->assertSame("", StatsDMocker::getWrittenData());
+      StatsDMocker::flushStatsOutput();
+      $this->assertSame("test-inc:1|c\ntest-inc:1|c",
+       StatsDMocker::getWrittenData());
+   }
 }
 
 class StatsDMocker extends StatsD {
    protected static $writtenData;
-   public static $writeImmediately = true;
 
    protected static function sendAsUDP($data) {
       self::$writtenData .= $data;

@@ -4,7 +4,7 @@
  * Sends statistics to the stats daemon over UDP
  **/
 class StatsD {
-   protected static $writeImmediately = false;
+   protected static $addStatsToQueue = false;
    protected static $queuedStats = array();
 
    /**
@@ -41,6 +41,23 @@ class StatsD {
    }
 
    /**
+    * Pause and collect all reported stats until flushStatsOutput() is called.
+    */
+   public static function pauseStatsOutput() {
+      static::$addStatsToQueue = true;
+   }
+
+   /**
+    * Send all stats generated AFTER a call to pauseStatsOutput()
+    * and resume immediate sending again.
+    */
+   public static function flushStatsOutput() {
+      static::$addStatsToQueue = false;
+      static::sendAllStats();
+   }
+
+
+   /**
     * Updates one or more stats counters by arbitrary amounts.
     *
     * @param string|array $stats The metric(s) to update. Should be either a string or array of metrics.
@@ -65,18 +82,16 @@ class StatsD {
       if ($sampleRate < 1) {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
-               $sampledData[$stat] = "$value|@$sampleRate";
+               self::$queuedStats[] = "$stat:$value|@$sampleRate";
             }
          }
       } else {
-         $sampledData = $data;
+         foreach($data as $stat => $value) {
+            self::$queuedStats[] = "$stat:$value";
+         }
       }
 
-      if (empty($sampledData)) { return; }
-
-      static::$queuedStats = array_merge(static::$queuedStats, $sampledData);
-
-      if (static::$writeImmediately) {
+      if (!static::$addStatsToQueue) {
          static::sendAllStats();
       }
    }
@@ -84,14 +99,9 @@ class StatsD {
    protected static function sendAllStats() {
       if (empty(static::$queuedStats)) return;
 
-      $data = array();
-      foreach (static::$queuedStats as $stat => $value) {
-         $data[] = "$stat:$value";
-      }
+      static::sendAsUDP(implode("\n", static::$queuedStats));
 
       static::$queuedStats = array();
-
-      static::sendAsUDP(implode("\n", $data));
    }
 
    /**
