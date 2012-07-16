@@ -16,6 +16,11 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
       $this->assertSame("test-dec:-1|c", StatsDMocker::getWrittenData());
    }
 
+   public function testTiming() {
+      StatsDMocker::timing("test-tim", 100);
+      $this->assertSame("test-tim:100|ms", StatsDMocker::getWrittenData());
+   }
+
    public function testUpdateStats() {
       StatsDMocker::updateStats("test-dec", -9);
       $this->assertSame("test-dec:-9|c", StatsDMocker::getWrittenData());

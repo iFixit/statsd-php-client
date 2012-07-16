@@ -11,11 +11,11 @@ class StatsD {
     * Log timing information
     *
     * @param string $stats The metric to in log timing info for.
-    * @param float $time The ellapsed time (us) to log
+    * @param float $time The ellapsed time (ms) to log
     * @param float|1 $sampleRate the rate (0-1) for sampling.
     **/
    public static function timing($stat, $time, $sampleRate=1) {
-      static::queueStats(array($stat => "$time|us"), $sampleRate);
+      static::queueStats(array($stat => "$time|ms"), $sampleRate);
    }
 
    /**
