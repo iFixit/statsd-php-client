@@ -105,12 +105,12 @@ class StatsD {
       if ($sampleRate < 1) {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
-               self::$queuedStats[] = "$stat:$value|@$sampleRate";
+               static::$queuedStats[] = "$stat:$value|@$sampleRate";
             }
          }
       } else {
          foreach($data as $stat => $value) {
-            self::$queuedStats[] = "$stat:$value";
+            static::$queuedStats[] = "$stat:$value";
          }
       }
 
