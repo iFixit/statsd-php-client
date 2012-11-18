@@ -100,9 +100,6 @@ class StatsD {
     * self::$addStatsToQueue
     */
    protected static function queueStats($data, $sampleRate=1) {
-      // sampling
-      $sampledData = array();
-
       if ($sampleRate < 1) {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
@@ -135,8 +132,6 @@ class StatsD {
     * Squirt the metrics over UDP
     */
    protected static function sendAsUDP($data) {
-      if (empty($sampledData)) { return; }
-
       // Wrap this in a try/catch -
       // failures in any of this should be silently ignored
       try {
