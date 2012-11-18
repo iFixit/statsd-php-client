@@ -16,6 +16,7 @@ class StatsD {
     */
    protected static $addStatsToQueue = false;
    protected static $queuedStats = array();
+   protected static $queuedCounters = array();
 
    /**
     * Log timing information
@@ -103,12 +104,20 @@ class StatsD {
       if ($sampleRate < 1) {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
-               static::$queuedStats[] = "$stat:$value|@$sampleRate";
+               if (substr($value, -1) === 'c') {
+                  static::$queuedCounters[$stat] += intval($value);
+               } else {
+                  static::$queuedStats[] = "$stat:$value|@$sampleRate";
+               }
             }
          }
       } else {
          foreach($data as $stat => $value) {
-            static::$queuedStats[] = "$stat:$value";
+            if (substr($value, -1) === 'c') {
+               static::$queuedCounters[$stat] += intval($value);
+            } else {
+               static::$queuedStats[] = "$stat:$value";
+            }
          }
       }
 
@@ -121,11 +130,18 @@ class StatsD {
     * Flush the queue and send all the stats we have.
     */
    protected static function sendAllStats() {
-      if (empty(static::$queuedStats)) return;
+      if (empty(static::$queuedStats) && empty(static::$queuedCounters))
+         return;
 
-      static::sendAsUDP(implode("\n", static::$queuedStats));
+      $lines = static::$queuedStats;
+      foreach(static::$queuedCounters as $stat => $value) {
+         $lines[] = "$stat:$value|c";
+      }
+
+      static::sendAsUDP(implode("\n", $lines));
 
       static::$queuedStats = array();
+      static::$queuedCounters = array();
    }
 
    /**
