@@ -104,13 +104,7 @@ class StatsD {
       if ($sampleRate < 1) {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
-               if (substr($value, -1) === 'c') {
-                  if (!isset(static::$queuedCounters[$stat])) {
-                     static::$queuedCounters[$stat] = 0;
-                  }
-               } else {
-                  static::$queuedStats[] = "$stat:$value|@$sampleRate";
-               }
+               static::$queuedStats[] = "$stat:$value|@$sampleRate";
             }
          }
       } else {
