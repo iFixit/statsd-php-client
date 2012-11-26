@@ -105,7 +105,9 @@ class StatsD {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
                if (substr($value, -1) === 'c') {
-                  static::$queuedCounters[$stat] += intval($value);
+                  if (!isset(static::$queuedCounters[$stat])) {
+                     static::$queuedCounters[$stat] = 0;
+                  }
                } else {
                   static::$queuedStats[] = "$stat:$value|@$sampleRate";
                }
@@ -114,6 +116,9 @@ class StatsD {
       } else {
          foreach($data as $stat => $value) {
             if (substr($value, -1) === 'c') {
+               if (!isset(static::$queuedCounters[$stat])) {
+                  static::$queuedCounters[$stat] = 0;
+               }
                static::$queuedCounters[$stat] += intval($value);
             } else {
                static::$queuedStats[] = "$stat:$value";
