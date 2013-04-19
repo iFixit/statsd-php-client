@@ -57,10 +57,20 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
    public function testPauseAndFlushSameName() {
       StatsDMocker::pauseStatsOutput();
       StatsDMocker::increment("test-inc");
-      StatsDMocker::increment("test-inc");
+      StatsDMocker::updateStats("test-inc", 3);
       $this->assertSame("", StatsDMocker::getWrittenData());
       StatsDMocker::flushStatsOutput();
-      $this->assertSame("test-inc:1|c\ntest-inc:1|c",
+      $this->assertSame("test-inc:4|c",
+       StatsDMocker::getWrittenData());
+   }
+
+   public function testPauseAndFlushSameNameTiming() {
+      StatsDMocker::pauseStatsOutput();
+      StatsDMocker::timing("test-tim", 3);
+      StatsDMocker::timing("test-tim", 4);
+      $this->assertSame("", StatsDMocker::getWrittenData());
+      StatsDMocker::flushStatsOutput();
+      $this->assertSame("test-tim:3|ms\ntest-tim:4|ms",
        StatsDMocker::getWrittenData());
    }
 
