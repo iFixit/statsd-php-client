@@ -36,6 +36,18 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
       $this->assertSame("test-inc:9|c", StatsDMocker::getWrittenData());
    }
 
+   public function testInternationalStats() {
+      $old = setlocale(LC_NUMERIC, 0);
+      setlocale(LC_NUMERIC, 'German');
+      StatsDMocker::timing("test", 9.01);
+      $this->assertSame("test:9.01|ms", StatsDMocker::getWrittenData());
+      StatsDMocker::gauge("test", 9.01);
+      $this->assertSame("test:9.01|g", StatsDMocker::getWrittenData());
+      StatsDMocker::updateStats("test", 1, 0.99999);
+      $this->assertSame("test:1|c|@0.99999", StatsDMocker::getWrittenData());
+      setlocale(LC_NUMERIC, $old);
+   }
+
    public function testSampleRate() {
       StatsDMocker::increment("test-inc", 0);
       StatsDMocker::decrement("test-dec", 0);

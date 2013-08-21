@@ -26,7 +26,7 @@ class StatsD {
     * @param float|1 $sampleRate the rate (0-1) for sampling.
     **/
    public static function timing($stat, $time, $sampleRate=1) {
-      static::queueStats(array($stat => "$time|ms"), $sampleRate);
+      static::queueStats(array($stat => self::num($time) . "|ms"), $sampleRate);
    }
 
    /**
@@ -36,7 +36,7 @@ class StatsD {
     * @param integer $value The value for this gauge
     */
    public static function gauge($stat, $value) {
-      static::queueStats(array($stat => "$value|g"));
+      static::queueStats(array($stat => self::num($value) . "|g"));
    }
 
    /**
@@ -104,7 +104,7 @@ class StatsD {
       if ($sampleRate < 1) {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
-               static::$queuedStats[] = "$stat:$value|@$sampleRate";
+               static::$queuedStats[] = "$stat:$value|@". self::num($sampleRate);
             }
          }
       } else {
@@ -160,5 +160,14 @@ class StatsD {
          fclose($fp);
       } catch (Exception $e) {
       }
+   }
+
+   /**
+    * This is the fastest way to ensure locale settings don't affect the 
+    * decimal separator. Really, this is the only way (besides temporarily 
+    * changing the locale) to really get what we want.
+    */
+   protected static function num($value) {
+      return strtr($value, ',', '.');
    }
 }
