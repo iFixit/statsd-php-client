@@ -89,6 +89,7 @@ class StatsD {
    public static function updateStats($stats, $delta=1, $sampleRate=1) {
       if (!is_array($stats)) { $stats = array($stats); }
       $data = array();
+      $delta = self::num($delta);
       foreach($stats as $stat) {
          $data[$stat] = "$delta|c";
       }
