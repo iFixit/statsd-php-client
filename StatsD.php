@@ -1,5 +1,6 @@
 <?php
 
+
 /**
  * Sends statistics to an instance of the statsd daemon over UDP
  *
@@ -9,6 +10,8 @@
 class StatsD {
    protected static $host = 'localhost';
    protected static $port = '8125';
+
+   const MAX_PACKET_SIZE = 512;
 
    /**
     * If true, stats are added to a queue until a flush is triggered
@@ -150,7 +153,7 @@ class StatsD {
          static::$queuedStats[] = $line;
       }
 
-      static::sendAsUDP(implode("\n", self::$queueStats));
+      self::sendLines(static::$queuedStats);
 
       static::$queuedStats = array();
       static::$queuedCounters = array();
@@ -173,6 +176,31 @@ class StatsD {
          fclose($fp);
       } catch (Exception $e) {
       }
+   }
+
+   /**
+    * Send these lines via UDP in groups of self::MAX_PACKET_SIZE bytes
+    * Sending UDP packets bigger than ~500-1000 bytes will mean the packets
+    * get fragmented, and if ONE fragment doesn't make it, the whole datagram 
+    * is thrown out.
+    */
+   protected static function sendLines($lines) {
+      $out = [];
+      $i = 0; $lineCount = count($lines);
+      while ($i < $lineCount) {
+         $line = $lines[$i];
+         $len = strlen($line) + 1;
+         $chunkSize += $len;
+         if ($chunkSize > self::MAX_PACKET_SIZE) {
+            static::sendAsUDP(implode("\n", $out));
+            $out = [$line];
+            $chunkSize = $len;
+         } else {
+            $out[] = $line;
+         }
+         $i++;
+      }
+      static::sendAsUDP(implode("\n", $out));
    }
 
    /**

@@ -79,6 +79,19 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
        StatsDMocker::getWrittenData());
    }
 
+   public function testmaxPacketSize() {
+      StatsDMocker::pauseStatsOutput();
+      for ($i=0; $i< 100; $i++) {
+         StatsDMocker::increment("test-stat-$i");
+      }
+      StatsDMocker::flushStatsOutput();
+      $dummy = StatsDMocker::getWrittenData();
+      $chunks = StatsDMocker::getWrittenChunks();
+      foreach ($chunks as $chunk) {
+         $this->assertLessThanOrEqual(512, strlen($chunk));
+      }
+   }
+
    public function testPauseAndFlushSameNameTiming() {
       StatsDMocker::pauseStatsOutput();
       StatsDMocker::timing("test-tim", 3);
@@ -101,14 +114,22 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
 
 class StatsDMocker extends StatsD {
    protected static $writtenData;
+   protected static $writtenChunks = [];
 
    protected static function sendAsUDP($data) {
       self::$writtenData .= $data;
+      self::$writtenChunks[] = $data;
    }
 
    public static function getWrittenData() {
       $data = self::$writtenData;
       self::$writtenData = "";
+      return $data;
+   }
+
+   public static function getWrittenChunks() {
+      $data = self::$writtenChunks;
+      self::$writtenChunks = [];
       return $data;
    }
 }
