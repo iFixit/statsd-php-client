@@ -29,11 +29,14 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
    }
 
    public function testUpdateStats() {
-      StatsDMocker::updateStats("test-dec", -9);
+      StatsDMocker::updateStat("test-dec", -9);
       $this->assertSame("test-dec:-9|c", StatsDMocker::getWrittenData());
 
-      StatsDMocker::updateStats("test-inc", 9);
+      StatsDMocker::updateStat("test-inc", 9);
       $this->assertSame("test-inc:9|c", StatsDMocker::getWrittenData());
+
+      StatsDMocker::updateStat("test-inc", 1.01);
+      $this->assertSame("test-inc:1.01|c", StatsDMocker::getWrittenData());
    }
 
    public function testInternationalStats() {
@@ -43,7 +46,7 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
       $this->assertSame("test:9.01|ms", StatsDMocker::getWrittenData());
       StatsDMocker::gauge("test", 9.01);
       $this->assertSame("test:9.01|g", StatsDMocker::getWrittenData());
-      StatsDMocker::updateStats("test", 1.0001, 0.99999);
+      StatsDMocker::updateStat("test", 1.0001, 0.99999);
       $this->assertSame("test:1.0001|c|@0.99999", StatsDMocker::getWrittenData());
       setlocale(LC_NUMERIC, $old);
    }
@@ -51,8 +54,8 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
    public function testSampleRate() {
       StatsDMocker::increment("test-inc", 0);
       StatsDMocker::decrement("test-dec", 0);
-      StatsDMocker::updateStats("test-dec", -9, 0);
-      StatsDMocker::updateStats("test-inc", 9, 0);
+      StatsDMocker::updateStat("test-dec", -9, 0);
+      StatsDMocker::updateStat("test-inc", 9, 0);
       $this->assertSame("", StatsDMocker::getWrittenData());
    }
 
@@ -69,7 +72,7 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
    public function testPauseAndFlushSameName() {
       StatsDMocker::pauseStatsOutput();
       StatsDMocker::increment("test-inc");
-      StatsDMocker::updateStats("test-inc", 3);
+      StatsDMocker::updateStat("test-inc", 3);
       $this->assertSame("", StatsDMocker::getWrittenData());
       StatsDMocker::flushStatsOutput();
       $this->assertSame("test-inc:4|c",

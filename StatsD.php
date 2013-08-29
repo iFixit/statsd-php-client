@@ -47,7 +47,7 @@ class StatsD {
     * @return boolean
     **/
    public static function increment($stats, $sampleRate=1) {
-      static::updateStats($stats, 1, $sampleRate);
+      static::updateStat($stats, 1, $sampleRate);
    }
 
    /**
@@ -58,7 +58,7 @@ class StatsD {
     * @return boolean
     **/
    public static function decrement($stats, $sampleRate=1) {
-      static::updateStats($stats, -1, $sampleRate);
+      static::updateStat($stats, -1, $sampleRate);
    }
 
    /**
@@ -79,22 +79,41 @@ class StatsD {
 
 
    /**
-    * Updates one or more stats counters by arbitrary amounts.
+    * Updates a counter by an arbitrary amount.
     *
     * @param string|array $stats The metric(s) to update. Should be either a string or array of metrics.
     * @param int|1 $delta The amount to increment/decrement each metric by.
     * @param float|1 $sampleRate the rate (0-1) for sampling.
     * @return boolean
     **/
-   public static function updateStats($stats, $delta=1, $sampleRate=1) {
-      if (!is_array($stats)) { $stats = array($stats); }
-      $data = array();
-      $delta = self::num($delta);
-      foreach($stats as $stat) {
-         $data[$stat] = "$delta|c";
+   public static function updateStat($stat, $delta=1, $sampleRate=1) {
+      $deltaStr = self::num($delta);
+      if ($sampleRate < 1) {
+         if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
+            static::$queuedStats[] = "$stat:$deltaStr|c|@". self::num($sampleRate);
+         }
+      } else {
+         if (!isset(static::$queuedCounters[$stat])) {
+            static::$queuedCounters[$stat] = 0;
+         }
+         static::$queuedCounters[$stat] += $delta;
       }
 
-      static::queueStats($data, $sampleRate);
+      if (!static::$addStatsToQueue) {
+         static::sendAllStats();
+      }
+   }
+
+   /**
+    * Deprecated, works, but will be removed in the future.
+    */
+   public static function updateStats($stats, $delta=1, $sampleRate=1) {
+      if (!is_array($stats)) {
+         return self::updateStat($stats, $delta, $sampleRate);
+      }
+      foreach($stats as $stat) {
+         self::updateStat($stat, $delta, $sampleRate);
+      }
    }
 
    /**
@@ -110,14 +129,7 @@ class StatsD {
          }
       } else {
          foreach($data as $stat => $value) {
-            if (substr($value, -1) === 'c') {
-               if (!isset(static::$queuedCounters[$stat])) {
-                  static::$queuedCounters[$stat] = 0;
-               }
-               static::$queuedCounters[$stat] += intval($value);
-            } else {
-               static::$queuedStats[] = "$stat:$value";
-            }
+            static::$queuedStats[] = "$stat:$value";
          }
       }
 
@@ -133,12 +145,12 @@ class StatsD {
       if (empty(static::$queuedStats) && empty(static::$queuedCounters))
          return;
 
-      $lines = static::$queuedStats;
       foreach(static::$queuedCounters as $stat => $value) {
-         $lines[] = "$stat:$value|c";
+         $line = "$stat:$value|c";
+         static::$queuedStats[] = $line;
       }
 
-      static::sendAsUDP(implode("\n", $lines));
+      static::sendAsUDP(implode("\n", self::$queueStats));
 
       static::$queuedStats = array();
       static::$queuedCounters = array();
