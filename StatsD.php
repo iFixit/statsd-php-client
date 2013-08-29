@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * Sends statistics to an instance of the statsd daemon over UDP
  *
@@ -185,7 +184,8 @@ class StatsD {
     * is thrown out.
     */
    protected static function sendLines($lines) {
-      $out = [];
+      $out = array();
+      $chunkSize = 0;
       $i = 0; $lineCount = count($lines);
       while ($i < $lineCount) {
          $line = $lines[$i];
@@ -193,7 +193,7 @@ class StatsD {
          $chunkSize += $len;
          if ($chunkSize > self::MAX_PACKET_SIZE) {
             static::sendAsUDP(implode("\n", $out));
-            $out = [$line];
+            $out = array($line);
             $chunkSize = $len;
          } else {
             $out[] = $line;

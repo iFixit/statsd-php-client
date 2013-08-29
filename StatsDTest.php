@@ -114,7 +114,7 @@ class StatsDTest extends PHPUnit_Framework_TestCase {
 
 class StatsDMocker extends StatsD {
    protected static $writtenData;
-   protected static $writtenChunks = [];
+   protected static $writtenChunks = array();
 
    protected static function sendAsUDP($data) {
       self::$writtenData .= $data;
@@ -129,7 +129,7 @@ class StatsDMocker extends StatsD {
 
    public static function getWrittenChunks() {
       $data = self::$writtenChunks;
-      self::$writtenChunks = [];
+      self::$writtenChunks = array();
       return $data;
    }
 }
