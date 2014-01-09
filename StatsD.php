@@ -7,34 +7,58 @@
  * See: https://github.com/etsy/statsd
  **/
 class StatsD {
+	/**
+	 * Name of our statsd-server
+	 * @var string
+	 */
    protected static $host = 'localhost';
+   /**
+    * UDP-port of the statsd-server
+    * @var string
+    */
    protected static $port = '8125';
 
+	/**
+	 * Maximum payload we may cramp into a UDP packet
+	 */
    const MAX_PACKET_SIZE = 512;
 
    /**
     * If true, stats are added to a queue until a flush is triggered
     * If false, stats are sent immediately, one UDP packet per call
+    * 
+    * @var bool
     */
    protected static $addStatsToQueue = false;
+   
+   /**
+    * Internal queue of stats to be sent
+    * @var array
+    */
    protected static $queuedStats = array();
+   
+   /**
+    * Internal representation of queued counters to be sent.
+    * This is used to aggregate increment/decrements before sending them.
+    * @var array
+    */
    protected static $queuedCounters = array();
 
    /**
     * Log timing information
     *
-    * @param string $stats The metric to in log timing info for.
+    * @param string $stat The metric to in log timing info for.
     * @param float $time The ellapsed time (ms) to log
-    * @param float|1 $sampleRate the rate (0-1) for sampling.
+    * @param float $sampleRate the rate (0-1) for sampling.
     **/
-   public static function timing($stat, $time, $sampleRate=1) {
+   public static function timing($stat, $time, $sampleRate=1.0) {
       static::queueStats(array($stat => self::num($time) . "|ms"), $sampleRate);
    }
 
    /**
     * Report the current value of some gauged value.
     *
-    * @param string|array $stat The metric to report ong
+    * @param string|array $stat The metric to report on
     * @param integer $value The value for this gauge
     */
    public static function gauge($stat, $value) {
@@ -42,25 +66,23 @@ class StatsD {
    }
 
    /**
-    * Increments one or more stats counters
+    * Increments one stats counter
     *
-    * @param string|array $stats The metric(s) to increment.
-    * @param float|1 $sampleRate the rate (0-1) for sampling.
-    * @return boolean
+    * @param string $stat The metric to increment.
+    * @param float $sampleRate the rate (0-1) for sampling.
     **/
-   public static function increment($stats, $sampleRate=1) {
-      static::updateStat($stats, 1, $sampleRate);
+   public static function increment($stat, $sampleRate=1.0) {
+      static::updateStat($stat, 1, $sampleRate);
    }
 
    /**
-    * Decrements one or more stats counters.
+    * Decrements one counter.
     *
-    * @param string|array $stats The metric(s) to decrement.
-    * @param float|1 $sampleRate the rate (0-1) for sampling.
-    * @return boolean
+    * @param string $stat The metric to decrement.
+    * @param float $sampleRate the rate (0-1) for sampling.
     **/
-   public static function decrement($stats, $sampleRate=1) {
-      static::updateStat($stats, -1, $sampleRate);
+   public static function decrement($stat, $sampleRate=1.0) {
+      static::updateStat($stat, -1, $sampleRate);
    }
 
    /**
@@ -83,12 +105,11 @@ class StatsD {
    /**
     * Updates a counter by an arbitrary amount.
     *
-    * @param string|array $stats The metric(s) to update. Should be either a string or array of metrics.
-    * @param int|1 $delta The amount to increment/decrement each metric by.
-    * @param float|1 $sampleRate the rate (0-1) for sampling.
-    * @return boolean
+    * @param string $stat The metric to update.
+    * @param int $delta The amount to increment/decrement the metric by.
+    * @param float $sampleRate the rate (0-1) for sampling.
     **/
-   public static function updateStat($stat, $delta=1, $sampleRate=1) {
+   public static function updateStat($stat, $delta=1, $sampleRate=1.0) {
       $deltaStr = self::num($delta);
       if ($sampleRate < 1) {
          if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
@@ -108,10 +129,15 @@ class StatsD {
 
    /**
     * Deprecated, works, but will be removed in the future.
+    * 
+    * @param string|array $stats The metric(s) to update. Should be either a string or an array of strings.
+    * @param int $delta The amount to increment/decrement each metric by.
+    * @param float $sampleRate the rate (0-1) for sampling
+    * @deprecated in favour of updateStat
     */
-   public static function updateStats($stats, $delta=1, $sampleRate=1) {
+   public static function updateStats($stats, $delta=1, $sampleRate=1.0) {
       if (!is_array($stats)) {
-         return self::updateStat($stats, $delta, $sampleRate);
+         self::updateStat($stats, $delta, $sampleRate);
       }
       foreach($stats as $stat) {
          self::updateStat($stat, $delta, $sampleRate);
@@ -121,8 +147,11 @@ class StatsD {
    /**
     * Add stats to the queue or send them immediately depending on
     * self::$addStatsToQueue
+    * 
+    * @param array $data The data to be queued.
+    * @param float $sampleRate the rate (0-1) for sampling
     */
-   protected static function queueStats($data, $sampleRate=1) {
+   protected static function queueStats($data, $sampleRate=1.0) {
       if ($sampleRate < 1) {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
@@ -160,6 +189,8 @@ class StatsD {
 
    /**
     * Squirt the metrics over UDP
+    * 
+    * @param array $data the data to be sent.
     */
    protected static function sendAsUDP($data) {
       // Wrap this in a try/catch -
@@ -182,6 +213,8 @@ class StatsD {
     * Sending UDP packets bigger than ~500-1000 bytes will mean the packets
     * get fragmented, and if ONE fragment doesn't make it, the whole datagram 
     * is thrown out.
+    * 
+    * @param array $lines The lines to be sent to the stats-Server
     */
    protected static function sendLines($lines) {
       $out = array();
@@ -207,6 +240,9 @@ class StatsD {
     * This is the fastest way to ensure locale settings don't affect the 
     * decimal separator. Really, this is the only way (besides temporarily 
     * changing the locale) to really get what we want.
+    * 
+    * @param string $value the value to be "translated" to the needed locale
+    * @return string the "translated" value
     */
    protected static function num($value) {
       return strtr($value, ',', '.');
