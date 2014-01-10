@@ -59,7 +59,7 @@ class StatsD {
     * Report the current value of some gauged value.
     *
     * @param string|array $stat The metric to report on
-    * @param integer $value The value for this gauge
+    * @param float $value The value for this gauge
     */
    public static function gauge($stat, $value) {
       static::queueStats(array($stat => self::num($value) . "|g"));
@@ -106,7 +106,7 @@ class StatsD {
     * Updates a counter by an arbitrary amount.
     *
     * @param string $stat The metric to update.
-    * @param int $delta The amount to increment/decrement the metric by.
+    * @param float $delta The amount to increment/decrement the metric by.
     * @param float $sampleRate the rate (0-1) for sampling.
     **/
    public static function updateStat($stat, $delta=1, $sampleRate=1.0) {
@@ -131,7 +131,7 @@ class StatsD {
     * Deprecated, works, but will be removed in the future.
     * 
     * @param string|array $stats The metric(s) to update. Should be either a string or an array of strings.
-    * @param int $delta The amount to increment/decrement each metric by.
+    * @param float $delta The amount to increment/decrement each metric by.
     * @param float $sampleRate the rate (0-1) for sampling
     * @deprecated in favour of updateStat
     */
