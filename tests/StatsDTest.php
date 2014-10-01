@@ -1,6 +1,6 @@
 <?php
 
-require("./StatsD.php");
+use iFixit\StatsD;
 
 /**
  * Designed to work with PHPUnit
