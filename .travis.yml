@@ -1,4 +1,8 @@
 language: php
 php:
   - 5.3
-script: phpunit StatsDTest.php
+before_script:
+  - composer self-update
+  - composer install --prefer-source --no-interaction --dev
+  
+script: phpunit

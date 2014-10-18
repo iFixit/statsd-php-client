@@ -6,6 +6,8 @@
  * Make changes here: https://github.com/iFixit/statsd-php-client
  * See: https://github.com/etsy/statsd
  **/
+namespace iFixit;
+
 class StatsD {
 	/**
 	 * Name of our statsd-server
