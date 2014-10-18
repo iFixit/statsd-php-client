@@ -140,6 +140,7 @@ class StatsD {
    public static function updateStats($stats, $delta=1, $sampleRate=1.0) {
       if (!is_array($stats)) {
          self::updateStat($stats, $delta, $sampleRate);
+         return;
       }
       foreach($stats as $stat) {
          self::updateStat($stat, $delta, $sampleRate);
