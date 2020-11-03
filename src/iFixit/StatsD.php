@@ -9,10 +9,10 @@
 namespace iFixit;
 
 class StatsD {
-	/**
-	 * Name of our statsd-server
-	 * @var string
-	 */
+   /**
+    * Name of our statsd-server
+    * @var string
+    */
    protected static $host = 'localhost';
    /**
     * UDP-port of the statsd-server
@@ -20,9 +20,9 @@ class StatsD {
     */
    protected static $port = '8125';
 
-	/**
-	 * Maximum payload we may cramp into a UDP packet
-	 */
+   /**
+    * Maximum payload we may cramp into a UDP packet
+    */
    const MAX_PACKET_SIZE = 512;
 
    /**
