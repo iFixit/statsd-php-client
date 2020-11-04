@@ -115,7 +115,7 @@ class StatsD {
       $deltaStr = self::num($delta);
       if ($sampleRate < 1) {
          if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
-            static::$queuedStats[] = "$stat:$deltaStr|c|@". self::num($sampleRate);
+            static::$queuedStats[] = "$stat:$deltaStr|c|@" . self::num($sampleRate);
          }
       } else {
          if (!isset(static::$queuedCounters[$stat])) {
@@ -158,7 +158,7 @@ class StatsD {
       if ($sampleRate < 1) {
          foreach ($data as $stat => $value) {
             if ((mt_rand() / mt_getrandmax()) <= $sampleRate) {
-               static::$queuedStats[] = "$stat:$value|@". self::num($sampleRate);
+               static::$queuedStats[] = "$stat:$value|@" . self::num($sampleRate);
             }
          }
       } else {
