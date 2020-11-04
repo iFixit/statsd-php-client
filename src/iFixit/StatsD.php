@@ -28,17 +28,17 @@ class StatsD {
    /**
     * If true, stats are added to a queue until a flush is triggered
     * If false, stats are sent immediately, one UDP packet per call
-    * 
+    *
     * @var bool
     */
    protected static $addStatsToQueue = false;
-   
+
    /**
     * Internal queue of stats to be sent
     * @var array
     */
    protected static $queuedStats = array();
-   
+
    /**
     * Internal representation of queued counters to be sent.
     * This is used to aggregate increment/decrements before sending them.
@@ -131,7 +131,7 @@ class StatsD {
 
    /**
     * Deprecated, works, but will be removed in the future.
-    * 
+    *
     * @param string|array $stats The metric(s) to update. Should be either a string or an array of strings.
     * @param float $delta The amount to increment/decrement each metric by.
     * @param float $sampleRate the rate (0-1) for sampling
@@ -150,7 +150,7 @@ class StatsD {
    /**
     * Add stats to the queue or send them immediately depending on
     * self::$addStatsToQueue
-    * 
+    *
     * @param array $data The data to be queued.
     * @param float $sampleRate the rate (0-1) for sampling
     */
@@ -192,7 +192,7 @@ class StatsD {
 
    /**
     * Squirt the metrics over UDP
-    * 
+    *
     * @param array $data the data to be sent.
     */
    protected static function sendAsUDP($data) {
@@ -214,9 +214,9 @@ class StatsD {
    /**
     * Send these lines via UDP in groups of self::MAX_PACKET_SIZE bytes
     * Sending UDP packets bigger than ~500-1000 bytes will mean the packets
-    * get fragmented, and if ONE fragment doesn't make it, the whole datagram 
+    * get fragmented, and if ONE fragment doesn't make it, the whole datagram
     * is thrown out.
-    * 
+    *
     * @param array $lines The lines to be sent to the stats-Server
     */
    protected static function sendLines($lines) {
@@ -240,10 +240,10 @@ class StatsD {
    }
 
    /**
-    * This is the fastest way to ensure locale settings don't affect the 
-    * decimal separator. Really, this is the only way (besides temporarily 
+    * This is the fastest way to ensure locale settings don't affect the
+    * decimal separator. Really, this is the only way (besides temporarily
     * changing the locale) to really get what we want.
-    * 
+    *
     * @param string $value the value to be "translated" to the needed locale
     * @return string the "translated" value
     */
