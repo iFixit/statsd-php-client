@@ -193,7 +193,7 @@ class StatsD {
    /**
     * Squirt the metrics over UDP
     *
-    * @param array $data the data to be sent.
+    * @param string $data the data to be sent.
     */
    protected static function sendAsUDP($data) {
       // Wrap this in a try/catch -
