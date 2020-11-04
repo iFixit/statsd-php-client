@@ -1,13 +1,14 @@
 <?php
 
 use iFixit\StatsD;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Designed to work with PHPUnit
  *
  * Make changes here: https://github.com/iFixit/statsd-php-client
  */
-class StatsDTest extends PHPUnit_Framework_TestCase {
+class StatsDTest extends TestCase {
    public function testIncrement() {
       StatsDMocker::increment("test-inc");
       $this->assertSame("test-inc:1|c", StatsDMocker::getWrittenData());
