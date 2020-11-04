@@ -226,21 +226,27 @@ class StatsD {
     * 
     * @param array $lines The lines to be sent to the stats-Server
     */
-   protected static function sendLines($lines) {
-      $out = array();
-      $chunkSize = 0;
-      $i = 0; $lineCount = count($lines);
+   protected static function sendLines(array $lines) {
+      $out = [];
+
+      $packetSize = 0;
+      $i = 0;
+      $lineCount = count($lines);
+
       while ($i < $lineCount) {
          $line = static::$prefix . $lines[$i];
          $len = strlen($line) + 1;
-         $chunkSize += $len;
-         if ($chunkSize > self::MAX_PACKET_SIZE) {
+
+         $packetFull = $packetSize + $len > self::MAX_PACKET_SIZE;
+         if ($packetFull) {
             static::sendAsUDP(implode("\n", $out));
-            $out = array($line);
-            $chunkSize = $len;
-         } else {
-            $out[] = $line;
+            $out = [];
+            $packetSize = 0;
          }
+
+         $out[] = $line;
+         $packetSize += $len;
+
          $i++;
       }
       static::sendAsUDP(implode("\n", $out));
