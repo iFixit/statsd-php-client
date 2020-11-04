@@ -19,6 +19,13 @@ class StatsD {
     * @var string
     */
    protected static $port = '8125';
+   /**
+    * Optional prefix for a metric's name.
+    * Useful for services that require an API key in the prefix,
+    * e.g. https://www.hostedgraphite.com/
+    * @var string
+    */
+   protected static $prefix = '';
 
 	/**
 	 * Maximum payload we may cramp into a UDP packet
@@ -224,7 +231,7 @@ class StatsD {
       $chunkSize = 0;
       $i = 0; $lineCount = count($lines);
       while ($i < $lineCount) {
-         $line = $lines[$i];
+         $line = static::$prefix . $lines[$i];
          $len = strlen($line) + 1;
          $chunkSize += $len;
          if ($chunkSize > self::MAX_PACKET_SIZE) {
